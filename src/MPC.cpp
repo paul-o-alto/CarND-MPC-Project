@@ -24,7 +24,7 @@ const double Lf = 2.67;
 // Objectives
 double ref_cte = 0;
 double ref_epsi = 0;
-double ref_v = 100; // choose better value?
+double ref_v = 50; // choose better value?
 
 size_t x_start = 0;
 size_t y_start = x_start + N;
@@ -126,12 +126,12 @@ class FG_eval {
       // epsi[t+1] = psi[t] - psides[t] + v[t] * delta[t] / Lf * dt
       fg[1 + x_start + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
       fg[1 + y_start + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * dt);
-      fg[1 + psi_start + t] = psi1 - (psi0 + v0 * delta0 / Lf * dt);
+      fg[1 + psi_start + t] = psi1 - (psi0 - v0 * delta0 / Lf * dt); // sim reverse
       fg[1 + v_start + t] = v1 - (v0 + a0 * dt);
       fg[1 + cte_start + t] =
           cte1 - ((f0 - y0) + (v0 * CppAD::sin(epsi0) * dt));
       fg[1 + epsi_start + t] =
-          epsi1 - ((psi0 - psides0) + v0 * delta0 / Lf * dt);
+          epsi1 - ((psi0 - psides0) - v0 * delta0 / Lf * dt); // sim reverse
     }
   }
 };
@@ -187,15 +187,15 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // degrees (values in radians).
   // NOTE: Feel free to change this to something else.
   for (int i = delta_start; i < a_start; i++) {
-    vars_lowerbound[i] = -0.436332;
-    vars_upperbound[i] = 0.436332;
+    vars_lowerbound[i] = -0.1; //-0.436332;
+    vars_upperbound[i] =  0.1; // 0.436332;
   }
 
   // Acceleration/decceleration upper and lower limits.
   // NOTE: Feel free to change this to something else.
   for (int i = a_start; i < n_vars; i++) {
-    vars_lowerbound[i] = -1.0;
-    vars_upperbound[i] = 1.0;
+    vars_lowerbound[i] = -0.5;
+    vars_upperbound[i] =  0.5;
   }
 
   // Lower and upper limits for the constraints
@@ -203,8 +203,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   Dvector constraints_lowerbound(n_constraints);
   Dvector constraints_upperbound(n_constraints);
   for (int i = 0; i < n_constraints; i++) {
-    constraints_lowerbound[i] = -0.436332*Lf;
-    constraints_upperbound[i] =  0.436332*Lf;
+    constraints_lowerbound[i] = -0.1*Lf; //-0.436332*Lf;
+    constraints_upperbound[i] =  0.1*Lf; // 0.436332*Lf;
   }
 
   constraints_lowerbound[x_start] = x;
@@ -259,22 +259,22 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
 
   vector<double> result;
   
-  //result.push_back(solution.x[delta_start]);
-  //result.push_back(solution.x[a_start]);
+  result.push_back(solution.x[delta_start]);
+  result.push_back(solution.x[a_start]);
   
-  //for (int i = 0; i < N-1; i++) {
-  //    result.push_back(solution.x[x_start + i + 1]);
-  //    result.push_back(solution.x[y_start + i + 1]);
-  //}
+  for (int i = 0; i < N-1; i++) {
+      result.push_back(solution.x[x_start + i + 1]);
+      result.push_back(solution.x[y_start + i + 1]);
+  }
   
-  //return result;
+  return result;
 
   // TODO: Return the first actuator values. The variables can be accessed with
   // `solution.x[i]`.
-  return {solution.x[x_start + 1],   solution.x[y_start + 1],
-          solution.x[psi_start + 1], solution.x[v_start + 1],
-          solution.x[cte_start + 1], solution.x[epsi_start + 1],
-          solution.x[delta_start],   solution.x[a_start]};
+  //return {solution.x[x_start + 1],   solution.x[y_start + 1],
+  //        solution.x[psi_start + 1], solution.x[v_start + 1],
+  //        solution.x[cte_start + 1], solution.x[epsi_start + 1],
+  //        solution.x[delta_start],   solution.x[a_start]};
   //
   // {...} is shorthand for creating a vector, so auto x1 = {1.0,2.0}
   // creates a 2 element double vector.
