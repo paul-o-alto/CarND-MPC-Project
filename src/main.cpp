@@ -97,11 +97,11 @@ int main() {
 
           for (int i=0; i<ptsx.size(); i++) {
               // shift car reference to 90 degrees
-              double shift_x = ptsx[i];//.px;
-              double shift_y = ptsy[i];//.py;
+              double shift_x = ptsx[i] - px;
+              double shift_y = ptsy[i] - py;
               
               ptsx[i] = (shift_x*cos(0-psi)-shift_y*sin(0-psi));
-              ptsy[i] = (shift_x*sin(0-psi)-shift_y*cos(0-psi));
+              ptsy[i] = (shift_x*sin(0-psi)+shift_y*cos(0-psi));
           }
           
           double* ptrx = &ptsx[0];
@@ -114,10 +114,13 @@ int main() {
           auto coeffs = polyfit(ptsx_transform, ptsy_transform, 3);
           
           cout << "Calculate cte/epsilon" << endl;
-          double cte  = polyeval(coeffs, 0);
-          double epsi = psi - atan(coeffs[1]+ 2*px*coeffs[2] + 
-                                   3*coeffs[3]*pow(px, 2));
-          cout << "cte/epsilon computed" << endl; //epsi = -atan(coeffs[1]); // Approximation
+          double cte;
+	  //cte = polyeval(coeffs, px) - py;
+	  cte = coeffs[0];
+          double epsi;
+	  //epsi = psi - atan(coeffs[0]+ px*coeffs[1] + coeffs[2]*pow(px, 2)); // 2* 3*
+	  epsi = -atan(coeffs[1]); // Approximation
+          cout << "cte/epsilon computed" << endl; 
           
           double steer_value = j[1]["steering_angle"];
           double throttle_value = j[1]["throttle"];
@@ -138,11 +141,12 @@ int main() {
           vector<double> next_y_vals;
           
           double poly_inc = 2.5;
-          int num_points = 25;
-          
+          int num_points = 10;
+          double temp_x, temp_y;
+
           for(int i = 1; i<num_points; i++) {
-              next_x_vals.push_back(poly_inc*1);
-              next_y_vals.push_back(polyeval(coeffs, poly_inc*i));
+              next_x_vals.push_back(ptsx[i]);
+              next_y_vals.push_back(ptsy[i]);
           }
           
           //Display the MPC predicted trajectory 
