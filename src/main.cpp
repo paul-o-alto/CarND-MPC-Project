@@ -94,8 +94,8 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
 
-
-          for (int i=0; i<ptsx.size(); i++) {
+     
+          for (int i=1; i<ptsx.size(); i++) {
               // shift car reference to 90 degrees
               double shift_x = ptsx[i] - px;
               double shift_y = ptsy[i] - py;
@@ -103,7 +103,7 @@ int main() {
               ptsx[i] = (shift_x*cos(0-psi)-shift_y*sin(0-psi));
               ptsy[i] = (shift_x*sin(0-psi)+shift_y*cos(0-psi));
           }
-          
+
           double* ptrx = &ptsx[0];
           Eigen::Map<Eigen::VectorXd> ptsx_transform(ptrx, 6);
           
@@ -112,48 +112,41 @@ int main() {
          
 	  cout << "Doing polyfit" << endl; 
           auto coeffs = polyfit(ptsx_transform, ptsy_transform, 3);
-          
+         
+          //Display the waypoints/reference line
+	  vector<double> next_x_vals;
+	  vector<double> next_y_vals;
+           
+	
+	  int num_points = ptsx.size();
+	  for(int i = 1; i<num_points; i++) {
+	      next_x_vals.push_back(ptsx[i]);
+	      next_y_vals.push_back(ptsy[i]); //polyeval(coeffs, ptsx[i]));
+	  }
+
+
           cout << "Calculate cte/epsilon" << endl;
-          double cte;
-	  //cte = polyeval(coeffs, px) - py;
-	  cte = coeffs[0];
-          double epsi;
-	  //epsi = psi - atan(coeffs[0]+ px*coeffs[1] + coeffs[2]*pow(px, 2)); // 2* 3*
-	  epsi = -atan(coeffs[1]); // Approximation
+          double cte  = abs(polyeval(coeffs, ptsx[0]));// - py);
+          double epsi = abs(//psi
+			    -atan(//coeffs[0] + 
+				    coeffs[1] //*pow(px, 1) 
+	  		          //+ 2*coeffs[2]*pow(px, 1)
+	  		   ));
           cout << "cte/epsilon computed" << endl; 
-          
-          double steer_value = j[1]["steering_angle"];
-          double throttle_value = j[1]["throttle"];
 
           Eigen::VectorXd state(6);
-          state << 0, 0, 0, v, cte, epsi;
+          state << ptsx[0], ptsy[0], psi, v, cte, epsi;
           
-          /*
-          * TODO: 
-	  */
 	  cout << "Calculate steering angle and throttle" << endl; // using MPC.
           //Both are in between [-1, 1].
           
           auto vars = mpc.Solve(state, coeffs);
           
-          //Display the waypoints/reference line
-          vector<double> next_x_vals;
-          vector<double> next_y_vals;
-          
-          double poly_inc = 2.5;
-          int num_points = 10;
-          double temp_x, temp_y;
-
-          for(int i = 1; i<num_points; i++) {
-              next_x_vals.push_back(ptsx[i]);
-              next_y_vals.push_back(ptsy[i]);
-          }
-          
           //Display the MPC predicted trajectory 
           vector<double> mpc_x_vals;
           vector<double> mpc_y_vals;
           
-          for(int i = 2; i < vars.size(); i++) {
+          for(int i = 2; i < vars.size(); i++) { // 2
               if (i % 2 == 0) {
                   mpc_x_vals.push_back(vars[i]);
               } else {
@@ -218,7 +211,8 @@ int main() {
       res->end(s.data(), s.length());
     } else {
       // i guess this should be done more gracefully?
-      res->end("", 0); //nullptr, 0);
+      //res->end("", 0); 
+      res->end(nullptr, 0);
     }
   });
 
