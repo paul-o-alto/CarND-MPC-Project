@@ -1,6 +1,22 @@
 # CarND-Controls-MPC
 Self-Driving Car Engineer Nanodegree Program
 
+## The Model
+
+The model code resides in MPC.cpp. For every telemetry even received from the Udacity Term 2 simulator, a call is made to the MPC class method Solve. This method takes in the coefficients of the polynomial fitted to the waypoints provided, as well as the current cross-track and psi error values. Based on these values, a set of current constraints are setup for the the current state, as well as the outputs. The Ipopt library is then invoked and takes a method for calculating the cost of the output it generates. In addition, Ipopt is provided with the update equations based on the car motion model.
+
+## Timestep Length and Elapsed Duration (N & dt)
+
+Several pairs of N and dt were tested. Initially, the provided N values was used, which was 25. The initial dt value was 0.05. This dt value was brought up to 0.1, 0.2, etc. But the value of N was always a problem (the model simply couldn't optimize for it and produced oscillating output). So this value was brought down from 25, to 20, and finally all the way down to 10.
+
+## Polynomial Fitting and MPC Preprocessing
+
+One of the main forms of preprocessing that was done was to shift the waypoints into being from the cars perspective. Namely, with the x-axis pointing ahead of the car and the y-axis to the left.  
+
+## Model Predictive Control with Latency
+
+In order to deal with latency, it was simply a matter of making the telemetry receiver sleep for 100ms before returning the actuation values. In addition, for fitting the polynomial, taking the current state and factoring it in as well was a necessary step. This had the effect of biasing the model a little bit more towards it's previous trajectory and not acting to much on the future prediction.
+
 ---
 
 ## Dependencies
