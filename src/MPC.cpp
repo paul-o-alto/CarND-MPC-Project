@@ -6,8 +6,8 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 25;
-double dt = 0.05;
+size_t N = 10;
+double dt = 0.1;
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -24,7 +24,7 @@ const double Lf = 2.67;
 // Objectives
 double ref_cte = 0;
 double ref_epsi = 0;
-double ref_v = 50; // choose better value?
+double ref_v = 30; // choose better value?
 
 size_t x_start = 0;
 size_t y_start = x_start + N;
@@ -53,21 +53,21 @@ class FG_eval {
     // The part of the cost based on the reference state.
     for (int t = 0; t < N; t++) {
       // CTE and Epsi matter more (hence high constant)
-      fg[0] += 200*CppAD::pow(vars[cte_start + t], 2); // - ref_cte, 2); //200 
-      fg[0] += 200*CppAD::pow(vars[epsi_start + t], 2); // - ref_epsi, 2); //200
+      fg[0] += 200*CppAD::pow(vars[cte_start + t] - ref_cte, 2); //2000
+      fg[0] += 200*CppAD::pow(vars[epsi_start + t] - ref_epsi, 2); //2000
       fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
     }
 
     // Minimize the use of actuators.
     for (int t = 0; t < N - 1; t++) { 
-      fg[0] += 5*CppAD::pow(vars[delta_start + t], 2); // 5 
-      fg[0] += 5*CppAD::pow(vars[a_start + t], 2); //5
+      fg[0] += 5*CppAD::pow(vars[delta_start + t], 2); // 5
+      fg[0] += 5*CppAD::pow(vars[a_start + t], 2); // 5
     }
 
     // Minimize the value gap between sequential actuations.
     for (int t = 0; t < N - 2; t++) {
       // Delta 200 for jerkiness
-      fg[0] += 200*CppAD::pow((vars[delta_start + t + 1]-vars[delta_start + t]), 2);//200
+      fg[0] += 200*CppAD::pow((vars[delta_start + t + 1]-vars[delta_start + t]), 2); //200
       fg[0] +=  10*CppAD::pow((vars[a_start + t + 1] - vars[a_start + t]), 2); //10
     }
     
@@ -177,15 +177,15 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // degrees (values in radians).
   // NOTE: Feel free to change this to something else.
   for (int i = delta_start; i < a_start; i++) {
-    vars_lowerbound[i] = -0.436332;
-    vars_upperbound[i] =  0.436332;
+    vars_lowerbound[i] = -0.436332*Lf;
+    vars_upperbound[i] =  0.436332*Lf;
   }
 
   // Acceleration/decceleration upper and lower limits.
   // NOTE: Feel free to change this to something else.
   for (int i = a_start; i < n_vars; i++) {
-    vars_lowerbound[i] = -0.5;
-    vars_upperbound[i] =  0.5;
+    vars_lowerbound[i] = -1.0; 
+    vars_upperbound[i] =  1.0; 
   }
 
   // Lower and upper limits for the constraints
@@ -193,8 +193,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   Dvector constraints_lowerbound(n_constraints);
   Dvector constraints_upperbound(n_constraints);
   for (int i = 0; i < n_constraints; i++) {
-    constraints_lowerbound[i] = -0.436332*Lf;
-    constraints_upperbound[i] =  0.436332*Lf;
+    constraints_lowerbound[i] = 0;
+    constraints_upperbound[i] = 0;
   }
 
   constraints_lowerbound[x_start] = x;
@@ -249,10 +249,10 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
 
   vector<double> result;
   
-  result.push_back(solution.x[delta_start]); // reverse for simulator
+  result.push_back(-solution.x[delta_start]); // reverse for simulator
   result.push_back(solution.x[a_start]);
   
-  for (int i = 0; i < N-1; i++) {
+  for (int i = 0; i < N-1; i++) { //0
       result.push_back(solution.x[x_start + i + 1]);
       result.push_back(solution.x[y_start + i + 1]);
   }
