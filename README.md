@@ -3,11 +3,11 @@ Self-Driving Car Engineer Nanodegree Program
 
 ## The Model
 
-The model code resides in MPC.cpp. For every telemetry even received from the Udacity Term 2 simulator, a call is made to the MPC class method Solve. This method takes in the coefficients of the polynomial fitted to the waypoints provided, as well as the current cross-track and psi error values. Based on these values, a set of current constraints are setup for the the current state, as well as the outputs. The Ipopt library is then invoked and takes a method for calculating the cost of the output it generates. In addition, Ipopt is provided with the update equations based on the car motion model.
+The model code resides in MPC.cpp. For every telemetry event received from the Udacity Term 2 simulator, a call is made to the MPC class method "Solve". This method takes in the coefficients of the polynomial fitted to the waypoints provided, as well as the current cross-track and psi error values. Based on these values, a set of current constraints are setup for the the state values, as well as the outputs of the model. The Ipopt library is then invoked and takes a method for calculating the cost of the output it generates. In addition, Ipopt is provided with the update equations based on the car's motion model. The telemetry event receiver in main.cpp invokes the MPC.Solve method for every telemetry event it receives and sends back the actuation that the model deems appropriate. Additionally, the future points the model would predict are also returned and sent to the simulator for visual debugging.
 
 ## Timestep Length and Elapsed Duration (N & dt)
 
-Several pairs of N and dt were tested. Initially, the provided N values was used, which was 25. The initial dt value was 0.05. This dt value was brought up to 0.1, 0.2, etc. But the value of N was always a problem (the model simply couldn't optimize for it and produced oscillating output). So this value was brought down from 25, to 20, and finally all the way down to 10.
+Several pairs of N and dt were tested. Initially, the default N value was used (which was 25). The initial dt value was 0.05. This dt value was brought up to 0.1, 0.2, etc. But the value of N was always a problem (the model simply couldn't optimize for it and produced oscillating output with very large actuation values). So this value was brought down from 25, to 20, and finally all the way down to 10.
 
 ## Polynomial Fitting and MPC Preprocessing
 
@@ -15,7 +15,7 @@ One of the main forms of preprocessing that was done was to shift the waypoints 
 
 ## Model Predictive Control with Latency
 
-In order to deal with latency, it was simply a matter of making the telemetry receiver sleep for 100ms before returning the actuation values. In addition, for fitting the polynomial, taking the current state and factoring it in as well was a necessary step. This had the effect of biasing the model a little bit more towards it's previous trajectory and not acting to much on the future prediction.
+In order to deal with latency, it was simply a matter of making the telemetry receiver sleep for 100ms before returning the actuation values. In addition, for fitting the polynomial, taking the current state and factoring it in as well was a necessary step. This had the effect of biasing the model a little bit more towards it's previous trajectory and not acting to much on the future predictions of the model.
 
 ---
 
