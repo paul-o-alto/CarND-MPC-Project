@@ -24,7 +24,7 @@ One of the main forms of preprocessing that was done was to shift the waypoints 
 
 ## Model Predictive Control with Latency
 
-In order to deal with latency, it was simply a matter of making the telemetry receiver sleep for 100ms before returning the actuation values. In addition, for fitting the polynomial, taking the current state and factoring it in as well was a necessary step. This had the effect of biasing the model a little bit more towards it's previous trajectory and not acting to much on the future predictions of the model. 
+In order to deal with latency, it was simply a matter of making the telemetry receiver sleep for 100ms before returning the actuation values. In addition, for fitting the polynomial, taking the current state and factoring it in as well was a necessary step. This had the effect of biasing the model a little bit more towards it's previous trajectory and not acting to much on the future predictions of the model. Furthermore, the granularity of the model is on a timescale equivalent to the delay of 100ms (dt=0.1, for the equations shown above). Given that the predicted model is on this time scale and that we optimize for smoother, less jerky paths, it stands to reason that we can rely on the first output provided by the solver.
 
 ---
 
