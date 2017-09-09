@@ -24,7 +24,7 @@ const double Lf = 2.67;
 // Objectives
 double ref_cte = 0;
 double ref_epsi = 0;
-double ref_v = 30; // choose better value?
+double ref_v = 50; // choose better value?
 
 size_t x_start = 0;
 size_t y_start = x_start + N;
@@ -67,7 +67,7 @@ class FG_eval {
     // Minimize the value gap between sequential actuations.
     for (int t = 0; t < N - 2; t++) {
       // Delta 200 for jerkiness
-      fg[0] += 200*CppAD::pow((vars[delta_start + t + 1]-vars[delta_start + t]), 2); //200
+      fg[0] += 4000*CppAD::pow((vars[delta_start + t + 1]-vars[delta_start + t]), 2); //200
       fg[0] +=  10*CppAD::pow((vars[a_start + t + 1] - vars[a_start + t]), 2); //10
     }
     
@@ -251,7 +251,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   
   result.push_back(-solution.x[delta_start]); // reverse for simulator
   result.push_back(solution.x[a_start]);
-  
+
   for (int i = 0; i < N-1; i++) { //0
       result.push_back(solution.x[x_start + i + 1]);
       result.push_back(solution.x[y_start + i + 1]);
