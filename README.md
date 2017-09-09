@@ -3,7 +3,16 @@ Self-Driving Car Engineer Nanodegree Program
 
 ## The Model
 
-The model code resides in MPC.cpp. For every telemetry event received from the Udacity Term 2 simulator, a call is made to the MPC class method "Solve". This method takes in the coefficients of the polynomial fitted to the waypoints provided, as well as the current cross-track and psi error values. Based on these values, a set of current constraints are setup for the the state values, as well as the outputs of the model. The Ipopt library is then invoked and takes a method for calculating the cost of the output it generates. In addition, Ipopt is provided with the update equations based on the car's motion model. The telemetry event receiver in main.cpp invokes the MPC.Solve method for every telemetry event it receives and sends back the actuation that the model deems appropriate. Additionally, the future points the model would predict are also returned and sent to the simulator for visual debugging.
+The model code resides in MPC.cpp. For every telemetry event received from the Udacity Term 2 simulator, a call is made to the MPC class method "Solve". This method takes in the coefficients of the polynomial fitted to the waypoints provided, as well as the current cross-track and psi error values (which were computed based on the variables in the previous time step). 
+
+![Cte](images/cte.png)
+![Epsi](images/epsi.png)
+
+Based on these values, a set of current constraints are setup for the the state values, as well as the outputs of the model. The Ipopt library is then invoked and takes a method for calculating the cost of the output it generates. In addition, Ipopt is provided with the update equations based on the car's motion model. This a basic kinematic model that doesn't account for the dynamical forces on the vehicle (such as slip ratio, etc.) and is summarized by the following equations.
+
+![Motion model](images/kinematic.png)
+
+The telemetry event receiver in main.cpp invokes the MPC.Solve method for every telemetry event it receives and sends back the actuation that the model deems appropriate. Additionally, the future points the model would predict are also returned and sent to the simulator for visual debugging.
 
 ## Timestep Length and Elapsed Duration (N & dt)
 
@@ -15,7 +24,7 @@ One of the main forms of preprocessing that was done was to shift the waypoints 
 
 ## Model Predictive Control with Latency
 
-In order to deal with latency, it was simply a matter of making the telemetry receiver sleep for 100ms before returning the actuation values. In addition, for fitting the polynomial, taking the current state and factoring it in as well was a necessary step. This had the effect of biasing the model a little bit more towards it's previous trajectory and not acting to much on the future predictions of the model.
+In order to deal with latency, it was simply a matter of making the telemetry receiver sleep for 100ms before returning the actuation values. In addition, for fitting the polynomial, taking the current state and factoring it in as well was a necessary step. This had the effect of biasing the model a little bit more towards it's previous trajectory and not acting to much on the future predictions of the model. Furthermore, the granularity of the model is on a timescale equivalent to the delay of 100ms (dt=0.1, for the equations shown above). Given that the predicted model is on this time scale and that we optimize for smoother, less jerky paths, it stands to reason that we can rely on the first output provided by the solver.
 
 ---
 
